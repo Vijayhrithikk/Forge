@@ -29,7 +29,7 @@ def _scan_gpus() -> list:
                 props = torch.cuda.get_device_properties(i)
                 gpus.append({
                     "index": i, "name": props.name,
-                    "vram_gb": round(getattr(props, 'total_memory', props.total_mem) / (1024**3), 1),
+                    "vram_gb": round((props.total_memory if hasattr(props, 'total_memory') else props.total_mem) / (1024**3), 1),
                     "compute_capability": f"{props.major}.{props.minor}",
                     "driver": torch._C._cuda_getDriverVersion() if hasattr(torch._C, '_cuda_getDriverVersion') else "unknown",
                 })

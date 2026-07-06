@@ -165,17 +165,34 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
         results["artifacts"].append(ds_result["path"])
         print(f"    Generated {ds_result['count']} samples")
 
-        # Stage 4: Tokenization
+        # Stage 4: Tokenization — produce proper HuggingFace Dataset format
         print("  [4/8] Tokenizing dataset...")
         t4 = time.time()
-        from app.training.tokenization import TokenizationRuntime
-        tok_runtime = TokenizationRuntime(prepared.tokenizer, hp_cfg.get("max_sequence_length", 2048))
-        tok_result = tok_runtime.tokenize(ds_result["records"], training_plan)
-        tok_runtime.save_report(Path("runtime"))
-        results["stages"]["tokenization"] = {"status": "PASS", "duration": round(time.time() - t4, 1),
-                                              "total_tokens": tok_result["total_tokens"]}
-        results["artifacts"].append("runtime/tokenization_report.json")
-        print(f"    {tok_result['total_tokens']} tokens")
+        max_len = hp_cfg.get("max_sequence_length", 2048)
+
+        def _tokenize_for_trainer(examples):
+            """Tokenize into input_ids + attention_mask format required by Trainer."""
+            texts = []
+            for r in examples:
+                instr = r.get("instruction", "")
+                inp = r.get("input", "")
+                output = r.get("output", "")
+                text = f"{instr}\n{inp}\n{output}" if inp else f"{instr}\n{output}"
+                texts.append(text)
+            encoded = prepared.tokenizer(
+                texts, truncation=True, padding="max_length",
+                max_length=max_len, return_tensors=None,
+            )
+            return encoded
+
+        # Convert to HF Dataset and tokenize
+        from datasets import Dataset as HFDataset
+        raw_dataset = HFDataset.from_list(ds_result["records"])
+        tokenized_dataset = raw_dataset.map(_tokenize_for_trainer, batched=True,
+                                             remove_columns=raw_dataset.column_names)
+        tokenized_dataset = tokenized_dataset.with_format("torch")
+        results["stages"]["tokenization"] = {"status": "PASS", "duration": round(time.time() - t4, 1)}
+        print(f"    Tokenized {len(tokenized_dataset)} samples")
 
         # Stage 5: LoRA Injection
         print("  [5/8] Injecting LoRA adapters...")
@@ -197,7 +214,7 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
         output_dir = Path("output")
         builder = TrainerBuilder()
         trainer = builder.build(peft_result["peft_model"], prepared.tokenizer,
-                                tok_result["tokenized"], training_plan, output_dir)
+                                tokenized_dataset, training_plan, output_dir)
         train_loss = 0.0
         if trainer.ready and trainer.trainer:
             train_result = trainer.trainer.train()

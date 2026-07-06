@@ -194,24 +194,28 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
         print("  [6/8] Building trainer and starting training...")
         t6 = time.time()
         from app.training.trainer_builder import TrainerBuilder
-        from app.training.callbacks import MetricsCallback
         output_dir = Path("output")
-        metrics_cb = MetricsCallback()
         builder = TrainerBuilder()
         trainer = builder.build(peft_result["peft_model"], prepared.tokenizer,
-                                tok_result["tokenized"], training_plan, output_dir,
-                                callbacks=[metrics_cb])
+                                tok_result["tokenized"], training_plan, output_dir)
+        train_loss = 0.0
         if trainer.ready and trainer.trainer:
             train_result = trainer.trainer.train()
-            train_loss = train_result.training_loss if hasattr(train_result, 'training_loss') else 0.0
+            # Collect metrics from trainer state (compatible with all transformers versions)
+            if hasattr(trainer.trainer, 'state') and hasattr(trainer.trainer.state, 'log_history'):
+                metrics = trainer.trainer.state.log_history
+                import json as _json
+                with open(output_dir / "training_metrics.json", "w") as f:
+                    _json.dump(metrics, f, indent=2)
+                if metrics:
+                    train_loss = metrics[-1].get("loss", 0.0)
+            results["stages"]["training"] = {"status": "PASS", "duration": round(time.time() - t6, 1),
+                                              "loss": train_loss}
+            results["artifacts"].append(str(output_dir / "training_metrics.json"))
+            print(f"    Training complete, loss={train_loss}")
         else:
-            train_result = None
-            train_loss = 0.0
-        metrics_cb.save(output_dir / "training_metrics.json")
-        results["stages"]["training"] = {"status": "PASS", "duration": round(time.time() - t6, 1),
-                                          "loss": train_loss}
-        results["artifacts"].append(str(output_dir / "training_metrics.json"))
-        print(f"    Training complete, loss={train_loss}")
+            results["stages"]["training"] = {"status": "FAIL", "reason": "Trainer not ready"}
+            print("    Trainer not ready — skipping training")
 
         # Stage 7: Adapter Save
         print("  [7/8] Saving adapter...")

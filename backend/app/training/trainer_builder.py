@@ -43,7 +43,6 @@ class TrainerBuilder:
         tokenized_dataset: Any,
         training_plan: Dict[str, Any],
         output_dir: Path,
-        callbacks: Optional[list] = None,
     ) -> ValidatedTrainer:
         """Construct and validate a trainer from all components.
 
@@ -65,7 +64,7 @@ class TrainerBuilder:
         result.model = peft_model
         result.tokenizer = tokenizer
         result.dataset = tokenized_dataset
-        result.callbacks = callbacks or []
+        result.callbacks = []
 
         try:
             from transformers import (
@@ -105,7 +104,6 @@ class TrainerBuilder:
                 args=training_args,
                 train_dataset=tokenized_dataset if hasattr(tokenized_dataset, '__len__') else None,
                 data_collator=result.data_collator,
-                callbacks=result.callbacks,
             )
             # Transformers 5.x uses processing_class, 4.x uses tokenizer
             if hasattr(Trainer.__init__, '__code__') and 'processing_class' in Trainer.__init__.__code__.co_varnames:

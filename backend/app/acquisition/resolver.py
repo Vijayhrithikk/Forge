@@ -27,7 +27,14 @@ class ResolvedAsset:
     target_modules: List[str]
     context_length: int
     files_to_acquire: List[str]  # Relative file paths to download
-    metadata: Dict[str, Any]
+    optional_files: set = None  # Files that may be absent
+    metadata: Dict[str, Any] = None
+
+    def __post_init__(self):
+        if self.optional_files is None:
+            self.optional_files = set()
+        if self.metadata is None:
+            self.metadata = {}
 
 
 class RegistryResolver:
@@ -45,9 +52,12 @@ class RegistryResolver:
         "config.json",
         "tokenizer.json",
         "tokenizer_config.json",
-        "special_tokens_map.json",
-        "generation_config.json",
+        "special_tokens_map.json",   # optional — not all tokenizers include this
+        "generation_config.json",    # optional — not all models include this
     ]
+
+    # Files that may be absent without failing verification
+    OPTIONAL_FILES = {"special_tokens_map.json", "generation_config.json", "tokenizer_config.json"}
 
     def resolve(self, model_id: str, revision: Optional[str] = None) -> ResolvedAsset:
         """Resolve a model ID into a complete acquisition plan.
@@ -80,6 +90,7 @@ class RegistryResolver:
             target_modules=entry.lora_defaults.get("target_modules", []),
             context_length=entry.context_length,
             files_to_acquire=files,
+            optional_files=self.OPTIONAL_FILES,
             metadata={
                 "parameters": entry.parameters,
                 "parameters_display": entry.parameters_display,

@@ -39,13 +39,15 @@ class IntegrityVerifier:
         results = {}
         missing = []
 
+        # Files that may legitimately be absent for some models
+        optional = getattr(asset, 'optional_files', set()) | {"model.safetensors.index.json"}
+
         # Check all standard files
         for filename in asset.files_to_acquire:
             file_path = cache_dir / "weights" / filename
             if not file_path.exists():
-                # Allow model.safetensors.index.json to be missing
-                # (it's generated during download)
-                if filename == "model.safetensors.index.json":
+                if filename in optional:
+                    results[filename] = "optional_missing"
                     continue
                 missing.append(filename)
                 results[filename] = "missing"

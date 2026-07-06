@@ -113,7 +113,6 @@ class TrainerBuilder:
             else:
                 trainer_kwargs['tokenizer'] = tokenizer
             result.trainer = Trainer(**trainer_kwargs)
-            )
 
             # Compute hash for reproducibility
             import hashlib

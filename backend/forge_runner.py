@@ -37,8 +37,9 @@ def bootstrap_bundle(bundle_path: str = "execution_package.json", force: bool = 
             "lora": {"rank": 8, "alpha": 16, "dropout": 0.05,
                      "target_modules": ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]},
             "hyperparameters": {"epochs": 1, "learning_rate": 2e-4, "batch_size": 1,
-                                "gradient_accumulation_steps": 2, "max_sequence_length": 2048,
-                                "precision": "bf16", "seed": 42},
+                                "gradient_accumulation_steps": 2, "max_sequence_length": 512,
+                                "precision": "bf16", "seed": 42,
+                                "gradient_checkpointing": True},
         }
 
         pkg = ExecutionPackage(training_plan, model_id, "auto-generated")

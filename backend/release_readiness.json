@@ -1,0 +1,12 @@
+{
+  "forge_version": "0.1.0",
+  "python_version": "3.11.9",
+  "modules": 142,
+  "api_routes": 15,
+  "domains": 14,
+  "import_failures": 0,
+  "runner_verified": true,
+  "simulation_verified": true,
+  "execution_portability": "Kaggle, RunPod, Vast.ai, Docker, Local GPU, Simulation",
+  "status": "READY_FOR_V1"
+}

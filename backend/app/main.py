@@ -28,6 +28,7 @@ from app.api.routes.training_api import router as training_api_router
 from app.api.routes.validation_api import router as validation_api_router
 from app.api.routes.execution_api import router as execution_api_router
 from app.api.routes.performance_api import router as performance_api_router
+from app.api.routes.provider_api import router as provider_api_router
 
 
 @asynccontextmanager
@@ -99,6 +100,7 @@ def create_app() -> FastAPI:
     app.include_router(validation_api_router, prefix="")
     app.include_router(execution_api_router, prefix="")
     app.include_router(performance_api_router, prefix="")
+    app.include_router(provider_api_router, prefix="")
 
     return app
 

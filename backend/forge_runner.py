@@ -96,8 +96,17 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
     print("GPU detected — executing real training pipeline...")
     training_plan = bundle.get("training_plan", {})
     model_id = bundle.get("model", "qwen2.5-1.5b-instruct")
-    lora_cfg = bundle.get("lora", {})
-    hp_cfg = bundle.get("hyperparameters", {})
+    # LoRA config: training_plan.lora takes priority over top-level bundle.lora
+    lora_cfg = training_plan.get("lora", bundle.get("lora", {}))
+    hp_cfg = training_plan.get("hyperparameters", bundle.get("hyperparameters", {}))
+    # Ensure target_modules are populated from registry defaults if missing
+    if not lora_cfg.get("target_modules"):
+        try:
+            from app.engines.training.registry import model_registry
+            m = model_registry.get_model(model_id)
+            lora_cfg["target_modules"] = m.lora_defaults.get("target_modules", [])
+        except Exception:
+            lora_cfg["target_modules"] = ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
 
     try:
         # Stage 1: Model Acquisition

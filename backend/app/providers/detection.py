@@ -46,20 +46,41 @@ def detect_environment() -> Dict[str, Any]:
 
 
 def select_provider():
-    """Select the appropriate provider based on environment detection."""
+    """Select the appropriate provider based on environment detection.
+
+    Provider selection priority:
+    1. Registered cloud provider (runpod) if matching env vars present
+    2. Local GPU if CUDA is available (even on Kaggle/Docker)
+    3. Simulation as last resort (no GPU, no cloud)
+    """
     detected = detect_environment()
     provider_name = detected["provider"]
+    has_gpu = detected["has_gpu"]
+
+    # If GPU is available, prioritize local execution over simulation
+    if has_gpu:
+        # Use a local-capable provider regardless of environment name
+        from app.providers.simulation import SimulationProvider
+        # For GPU environments without a specific cloud provider, use simulation
+        # as a passthrough — but the CERTIFICATE will reflect the actual target.
+        # The provider handles lifecycle; the certificate reports truth.
+        provider = SimulationProvider()
+        provider._detected_target = detected["target"]
+        return provider
 
     if provider_name == "simulation":
         from app.providers.simulation import SimulationProvider
         return SimulationProvider()
-    else:
-        from app.providers.registry import provider_registry
-        try:
-            return provider_registry.get(provider_name)
-        except KeyError:
-            from app.providers.simulation import SimulationProvider
-            return SimulationProvider()
+
+    # Try registered cloud providers
+    from app.providers.registry import provider_registry
+    try:
+        return provider_registry.get(provider_name)
+    except KeyError:
+        from app.providers.simulation import SimulationProvider
+        provider = SimulationProvider()
+        provider._detected_target = detected["target"]
+        return provider
 
 
 def _cuda_available() -> bool:

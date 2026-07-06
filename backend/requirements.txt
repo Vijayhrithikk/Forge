@@ -15,5 +15,26 @@ structlog==24.4.0
 aiofiles==25.1.0
 python-multipart==0.0.32
 
+# --------------------------------------------------------------------
+# ML Training Dependencies (required for fine-tuning)
+# --------------------------------------------------------------------
+# These packages are required for real training execution.
+# For development/simulation without GPU, they are optional.
+torch>=2.0.0
+transformers>=4.40.0
+datasets>=2.14.0
+peft>=0.10.0
+accelerate>=0.30.0
+trl>=0.10.0
+safetensors>=0.4.0
+huggingface_hub>=0.20.0
+tokenizers>=0.19.0
+
+# Optional: quantization and performance
+bitsandbytes>=0.41.0
+sentencepiece>=0.1.99
+
+# --------------------------------------------------------------------
 # Development
+# --------------------------------------------------------------------
 httpx==0.28.1

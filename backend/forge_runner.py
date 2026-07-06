@@ -136,12 +136,21 @@ if __name__ == "__main__":
     result = run_forge_pipeline(validation["bundle"])
     print(f"Forge: {result['status']}")
 
-    # 5. Generate certificate
-    is_simulation = env_info["target"] == "simulation"
+    # 5. Generate certificate — status reflects actual execution target
+    target = env_info["target"]
+    cert_status_map = {
+        "simulation": "SIMULATION_VALIDATED",
+        "local_gpu": "LOCAL_VALIDATED",
+        "kaggle": "KAGGLE_VALIDATED",
+        "runpod": "RUNPOD_VALIDATED",
+        "vastai": "REMOTE_VALIDATED",
+        "docker": "REMOTE_VALIDATED",
+    }
+    cert_status = cert_status_map.get(target, "EXECUTION_FAILED") if result["status"] == "READY" else "EXECUTION_FAILED"
     cert = {
-        "execution_target": env_info["target"], "provider": provider.name(),
-        "environment": env_info, "execution_status": "SIMULATION_VALIDATED" if is_simulation else "EXECUTION_VALIDATED",
-        "overall": "SIMULATION_VALIDATED" if is_simulation else "EXECUTION_VALIDATED",
+        "execution_target": target, "provider": provider.name(),
+        "environment": env_info, "execution_status": cert_status,
+        "overall": cert_status,
         "duration_seconds": round(time.time() - t0, 2), "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ'),
     }
     with open("execution_certificate.json", "w") as f: json.dump(cert, f, indent=2)

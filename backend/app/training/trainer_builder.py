@@ -99,14 +99,20 @@ class TrainerBuilder:
                 tokenizer=tokenizer, mlm=False,
             )
 
-            # Build trainer
-            result.trainer = Trainer(
+            # Build trainer — use processing_class for transformers 5.x compat
+            trainer_kwargs = dict(
                 model=peft_model,
                 args=training_args,
                 train_dataset=tokenized_dataset if hasattr(tokenized_dataset, '__len__') else None,
-                tokenizer=tokenizer,
                 data_collator=result.data_collator,
                 callbacks=result.callbacks,
+            )
+            # Transformers 5.x uses processing_class, 4.x uses tokenizer
+            if hasattr(Trainer.__init__, '__code__') and 'processing_class' in Trainer.__init__.__code__.co_varnames:
+                trainer_kwargs['processing_class'] = tokenizer
+            else:
+                trainer_kwargs['tokenizer'] = tokenizer
+            result.trainer = Trainer(**trainer_kwargs)
             )
 
             # Compute hash for reproducibility

@@ -171,13 +171,19 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
         max_len = hp_cfg.get("max_sequence_length", 2048)
 
         def _tokenize_for_trainer(examples):
-            """Tokenize into input_ids + attention_mask format required by Trainer."""
+            """Tokenize into input_ids + attention_mask format required by Trainer.
+            With batched=True, examples is a dict of lists: {"instruction": [...], "input": [...], "output": [...]}
+            """
             texts = []
-            for r in examples:
-                instr = r.get("instruction", "")
-                inp = r.get("input", "")
-                output = r.get("output", "")
-                text = f"{instr}\n{inp}\n{output}" if inp else f"{instr}\n{output}"
+            instructions = examples.get("instruction", [])
+            inputs_list = examples.get("input", [])
+            outputs = examples.get("output", [])
+            batch_size = len(instructions) if instructions else len(outputs)
+            for i in range(batch_size):
+                instr = instructions[i] if i < len(instructions) else ""
+                inp = inputs_list[i] if i < len(inputs_list) else ""
+                out = outputs[i] if i < len(outputs) else ""
+                text = f"{instr}\n{inp}\n{out}" if inp else f"{instr}\n{out}"
                 texts.append(text)
             encoded = prepared.tokenizer(
                 texts, truncation=True, padding="max_length",

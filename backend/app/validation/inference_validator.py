@@ -16,14 +16,19 @@ class InferenceValidator:
             return results
 
         try:
-            prompt = "Hello, how are you?"
+            prompt = "Explain what LoRA fine-tuning is in one sentence."
             inputs = tokenizer(prompt, return_tensors="pt")
-            outputs = model.generate(**inputs, max_new_tokens=10)
+            # Move inputs to the same device as the model
+            device = next(model.parameters()).device
+            inputs = {k: v.to(device) for k, v in inputs.items()}
+            model.eval()
+            with __import__('torch').no_grad():
+                outputs = model.generate(**inputs, max_new_tokens=20)
             generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
             latency = round(time.time() - t0, 2)
             results = {
                 "status": "PASS", "prompt": prompt, "generated": generated,
-                "latency_seconds": latency, "tokens": outputs.shape[1],
+                "latency_seconds": latency, "tokens": int(outputs.shape[1]),
             }
             logger.info("inference_validation_pass", latency=latency)
         except Exception as e:

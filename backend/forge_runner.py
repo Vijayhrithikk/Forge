@@ -69,7 +69,122 @@ def validate_bundle(bundle_path: str = "execution_package.json") -> dict:
     return {"status": "PASS", "bundle": bundle, "package_id": bundle["package_id"]}
 
 
-def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
+def process_documents(docs_dir: str = "documents") -> dict:
+    """Check for documents and generate instruction dataset if present.
+
+    Returns {"found": bool, "pairs": list, "stats": dict, "dataset_path": str}
+    """
+    docs_path = Path(docs_dir)
+    if not docs_path.exists() or not any(docs_path.iterdir()):
+        return {"found": False, "message": "No documents directory found. Place PDF/DOCX/CSV/TXT files in 'documents/'."}
+
+    print(f"Documents found in {docs_dir}/ — generating instruction dataset...")
+    from app.engines.dataset.document_engine import extractor, generator
+
+    files = list(docs_path.iterdir())
+    supported = [f for f in files if f.suffix.lower() in DocumentExtractor.SUPPORTED]
+    if not supported:
+        return {"found": False, "message": f"No supported files in {docs_dir}/. Supported: {DocumentExtractor.SUPPORTED}"}
+
+    from app.engines.dataset.document_engine import DocumentExtractor
+    pairs, stats = generator.generate_from_files([docs_path])
+    if not pairs:
+        return {"found": False, "message": "No text extracted from documents."}
+
+    # Save as JSONL dataset
+    dataset_path = Path("data/dataset/document_dataset.jsonl")
+    generator.save_dataset(pairs, dataset_path)
+
+    # Validate the generated dataset
+    print(f"  Documents: {stats['documents_processed']}")
+    print(f"  Chunks extracted: {stats['chunks_extracted']}")
+    print(f"  Instruction pairs generated: {stats['pairs_generated']}")
+    print(f"  Dataset saved: {dataset_path}")
+
+    # Quick validation
+    duplicates = len(pairs) - len(set(p["instruction"] for p in pairs))
+    empty = sum(1 for p in pairs if not p["instruction"].strip() or not p["output"].strip())
+    too_short = sum(1 for p in pairs if len(p["output"]) < 20)
+    validation = {"duplicates": duplicates, "empty": empty, "too_short": too_short,
+                  "total": len(pairs), "valid": len(pairs) - empty - too_short}
+
+    print(f"  Validation: {validation['valid']}/{validation['total']} valid pairs"
+          + (f" ({duplicates} duplicates, {empty} empty, {too_short} too short)" if duplicates or empty or too_short else ""))
+
+    # Copy to project dataset directory for training
+    project_dataset = Path("data/dataset") / "original.jsonl"
+    project_dataset.parent.mkdir(parents=True, exist_ok=True)
+    import shutil
+    shutil.copy(dataset_path, project_dataset)
+
+    # Create metadata
+    meta = {"records": len(pairs), "average_tokens": sum(len(p["output"].split()) for p in pairs) * 1.3 / max(len(pairs), 1),
+            "maximum_tokens": max(len(p["output"].split()) for p in pairs) * 1.3,
+            "duplicates": duplicates, "empty_prompts": empty, "empty_responses": 0,
+            "quality_score": max(0, 100 - duplicates * 2 - empty * 10 - too_short * 3),
+            "schema_version": "1.0", "generation_method": "document-to-instruction",
+            "sources": stats.get("sources", [])}
+    meta_path = Path("data/dataset") / "metadata.json"
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(meta_path, "w") as f:
+        import json as _json
+        _json.dump(meta, f, indent=2)
+
+    return {"found": True, "pairs": pairs, "stats": stats, "dataset_path": str(dataset_path),
+            "validation": validation, "metadata": meta}
+
+
+def chat_mode(model, tokenizer, adapter_path: str = "output"):
+    """Interactive chat session with the fine-tuned model."""
+    print("\n" + "=" * 60)
+    print("FORGE INTERACTIVE CHAT")
+    print("=" * 60)
+    print(f"Model loaded. Type 'quit' to exit, 'help' for commands.\n")
+
+    chat_log = []
+    import torch
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+
+        if not user_input:
+            continue
+        if user_input.lower() in ("quit", "exit", "q"):
+            break
+        if user_input.lower() == "help":
+            print("Commands: quit/exit/q (leave), help (this message), stats (show chat stats)")
+            continue
+        if user_input.lower() == "stats":
+            print(f"Chat turns: {len(chat_log)}")
+            continue
+
+        t0 = time.time()
+        try:
+            inputs = tokenizer(user_input, return_tensors="pt")
+            device = next(model.parameters()).device
+            inputs = {k: v.to(device) for k, v in inputs.items()}
+            model.eval()
+            with torch.no_grad():
+                outputs = model.generate(**inputs, max_new_tokens=200, do_sample=True,
+                                          temperature=0.7, top_p=0.9)
+            response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            latency = round(time.time() - t0, 2)
+            print(f"Assistant: {response}\n")
+            chat_log.append({"prompt": user_input, "response": response, "latency": latency})
+        except Exception as e:
+            print(f"[Error: {e}]")
+
+    # Save chat report
+    report_path = Path("chat_validation_report.json")
+    with open(report_path, "w") as f:
+        import json as _json
+        _json.dump({"turns": len(chat_log), "log": chat_log,
+                     "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ')}, f, indent=2)
+    print(f"\nChat session ended. {len(chat_log)} turns saved to {report_path}.")
+    return chat_log
     """Initialize and run the Forge Runtime from the execution bundle.
 
     When GPU is available: executes the complete training pipeline.
@@ -264,6 +379,8 @@ def run_forge_pipeline(bundle: dict, has_gpu: bool = False) -> dict:
         print(f"    Inference: {inf_result['status']}")
 
         results["status"] = "TRAINING_COMPLETED"
+        results["_model"] = prepared.model
+        results["_tokenizer"] = prepared.tokenizer
         print("  Real training pipeline completed successfully!")
 
     except Exception as e:
@@ -312,11 +429,31 @@ if __name__ == "__main__":
     health = provider.health()
     print(f"Provider: {provider.name()} health={health['status']}")
 
-    # 4. Run Forge pipeline — pass GPU status for real execution decision
+    # 4. Check for documents and generate dataset if present
+    doc_result = process_documents("documents")
+
+    # 5. Run Forge pipeline — pass GPU status for real execution decision
+    if doc_result["found"]:
+        print(f"\nDocument-to-Dataset: {doc_result['stats']['pairs_generated']} instruction pairs from "
+              f"{doc_result['stats']['documents_processed']} document(s).")
+        # If documents present, ensure the training plan uses the generated dataset
+        if "training_plan" in validation.get("bundle", {}):
+            validation["bundle"]["training_plan"]["dataset"] = doc_result["metadata"]
+        # Re-bootstrap with document dataset hash
+        from app.providers.execution_package import ExecutionPackage
+        import hashlib
+        doc_hash = hashlib.sha256(str(doc_result["stats"]).encode()).hexdigest()[:16]
+        update_pkg = ExecutionPackage(
+            validation["bundle"].get("training_plan", {}),
+            validation["bundle"].get("model", "qwen2.5-1.5b-instruct"),
+            doc_hash
+        )
+        update_pkg.save(Path(bundle_path))
+
     result = run_forge_pipeline(validation["bundle"], has_gpu=env_info["has_gpu"])
     print(f"Forge: {result['status']}")
 
-    # 5. Generate certificate — status reflects actual execution outcome
+    # 6. Generate certificate — status reflects actual execution outcome
     target = env_info["target"]
     status = result["status"]
     if status == "TRAINING_COMPLETED":
@@ -355,5 +492,55 @@ if __name__ == "__main__":
         trace["stages"].append({"stage": stage_name, **stage_data})
     with open("execution_trace.json", "w") as f: json.dump(trace, f, indent=2)
 
-    print(f"Runner complete in {round(time.time() - t0, 2)}s")
+    # 7. Chat validation (automatic test prompts for notebook, interactive for terminal)
+    if result["status"] == "TRAINING_COMPLETED":
+        adapter_path = Path("output")
+        if (adapter_path / "adapter_model.safetensors").exists() and result.get("_model"):
+            print("\n" + "=" * 60)
+            print("CHAT VALIDATION (fine-tuned model)")
+            print("=" * 60)
+            import torch
+            model = result["_model"]
+            tokenizer = result["_tokenizer"]
+            device = next(model.parameters()).device
+            model.eval()
+
+            # Test prompts covering different question types
+            test_prompts = [
+                "Summarize the main topics covered in the document.",
+                "What are the key points about fine-tuning from the document?",
+                "Explain what Forge does based on the document content.",
+                "List the steps for setting up training as described in the document.",
+            ]
+            chat_log = []
+            for prompt in test_prompts:
+                t0 = time.time()
+                try:
+                    inputs = tokenizer(prompt, return_tensors="pt")
+                    inputs = {k: v.to(device) for k, v in inputs.items()}
+                    with torch.no_grad():
+                        outputs = model.generate(**inputs, max_new_tokens=150, do_sample=True,
+                                                  temperature=0.7, top_p=0.9)
+                    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                    latency = round(time.time() - t0, 2)
+                    chat_log.append({"prompt": prompt, "response": response, "latency": latency})
+                    print(f"\nQ: {prompt}")
+                    print(f"A: {response[:300]}{'...' if len(response) > 300 else ''}")
+                except Exception as e:
+                    print(f"Q: {prompt}\n[Error: {e}]")
+
+            with open("chat_validation_report.json", "w") as f:
+                import json as _json
+                _json.dump({"turns": len(chat_log), "log": chat_log,
+                             "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ')}, f, indent=2)
+            print(f"\nChat validation complete. {len(chat_log)} prompts tested.")
+            results["chat_validation"] = {"prompts_tested": len(chat_log),
+                                           "report": "chat_validation_report.json"}
+
+            # If running interactively, launch full chat mode
+            if sys.stdin.isatty():
+                print("\nLaunching interactive chat (type 'quit' to exit)...")
+                chat_mode(model, tokenizer)
+
+    print(f"\nRunner complete in {round(time.time() - t0, 2)}s")
     sys.exit(0)

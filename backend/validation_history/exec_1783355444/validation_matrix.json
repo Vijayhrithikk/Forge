@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "forge_version": "0.1.0",
+  "generated_at": "2026-07-06T16:30:45.244688+00:00",
+  "scenarios": [
+    {
+      "scenario": "Normal Execution",
+      "status": "SKIPPED",
+      "reason": "No GPU available",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Offline Cache Execution",
+      "status": "SKIPPED",
+      "reason": "No GPU available",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Cancellation",
+      "status": "PASS",
+      "reason": "Executed successfully",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Checkpoint Resume",
+      "status": "SKIPPED",
+      "reason": "No GPU available",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Adapter Reload",
+      "status": "PASS",
+      "reason": "Executed successfully",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Inference",
+      "status": "PASS",
+      "reason": "Executed successfully",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    },
+    {
+      "scenario": "Artifact Verification",
+      "status": "PASS",
+      "reason": "Executed successfully",
+      "timestamp": "2026-07-06T16:30:45.244688+00:00"
+    }
+  ],
+  "overall": "WARNING",
+  "executable_scenarios": 4,
+  "skipped_scenarios": 3,
+  "duration_seconds": 0.0
+}

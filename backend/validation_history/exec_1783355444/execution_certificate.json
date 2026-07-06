@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "forge_version": "0.1.0",
+  "generated_at": "2026-07-06T16:30:45.240235+00:00",
+  "execution_target": "local",
+  "model": "qwen2.5-1.5b-instruct",
+  "training": {
+    "attempted": true,
+    "succeeded": false
+  },
+  "adapter": {
+    "validated": false
+  },
+  "inference": {
+    "validated": false
+  },
+  "overall_result": "FAIL",
+  "skip_reason": "Environment cannot execute: No CUDA GPU detected, Low VRAM (0GB)"
+}

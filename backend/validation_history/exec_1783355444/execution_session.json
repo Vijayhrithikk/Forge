@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "forge_version": "0.1.0",
+  "session_id": "exec_1783355444",
+  "execution_target": "local",
+  "environment_capability_hash": "440498695344873722",
+  "validation_plan_hash": "-1106507686367831285",
+  "dataset_hash": "98af931d7a2ce481ded7aa7eae15fa2f0cb0301589da189f086c481778ddbe42",
+  "model": "qwen2.5-1.5b-instruct",
+  "state": "SKIPPED",
+  "stages": {
+    "target_detection": {
+      "status": "PASS",
+      "detail": "local",
+      "timestamp": "2026-07-06T16:30:44.478877+00:00"
+    },
+    "dataset_generation": {
+      "status": "PASS",
+      "detail": "100 samples",
+      "timestamp": "2026-07-06T16:30:44.478877+00:00"
+    },
+    "session_created": {
+      "status": "PASS",
+      "detail": "exec_1783355444",
+      "timestamp": "2026-07-06T16:30:44.478877+00:00"
+    },
+    "execution_started": {
+      "status": "PASS",
+      "detail": "Attempting execution",
+      "timestamp": "2026-07-06T16:30:45.237560+00:00"
+    },
+    "execution_skipped": {
+      "status": "SKIPPED",
+      "detail": "Environment cannot execute: No CUDA GPU detected, Low VRAM (0GB)",
+      "timestamp": "2026-07-06T16:30:45.237560+00:00"
+    }
+  },
+  "warnings": [],
+  "failures": [],
+  "started_at": "2026-07-06T16:30:44.478877+00:00",
+  "completed_at": "2026-07-06T16:30:45.239236+00:00"
+}

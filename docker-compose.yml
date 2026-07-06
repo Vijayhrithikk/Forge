@@ -1,0 +1,64 @@
+# =============================================================================
+# Forge — Docker Compose
+# =============================================================================
+# One command to start the entire application:
+#   docker compose up
+#
+# Development mode with hot reload:
+#   docker compose watch
+# =============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: forge-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - APP_NAME=${APP_NAME:-Forge}
+      - APP_VERSION=${APP_VERSION:-0.1.0}
+      - APP_ENV=${APP_ENV:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      - FORGE_DATA_DIR=${FORGE_DATA_DIR:-/app/data}
+    volumes:
+      - forge-data:/app/data
+    networks:
+      - forge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: forge-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - forge-network
+    restart: unless-stopped
+
+volumes:
+  forge-data:
+    driver: local
+
+networks:
+  forge-network:
+    driver: bridge

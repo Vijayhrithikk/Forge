@@ -1,0 +1,343 @@
+{
+  "schema_version": "1.0",
+  "description": "Forge Model Registry — curated set of LoRA-compatible open-weight models.",
+  "models": [
+    {
+      "id": "tinyllama-1.1b-chat",
+      "name": "TinyLlama 1.1B Chat",
+      "huggingface_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "architecture": "LlamaForCausalLM",
+      "family": "llama",
+      "parameters": 1100000000,
+      "parameters_display": "1.1B",
+      "context_length": 2048,
+      "tokenizer": "LlamaTokenizer",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 8,
+      "recommended_gpu": "NVIDIA RTX 3060 12GB",
+      "license": "Apache 2.0",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 8,
+        "alpha": 16,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 8,
+        "recommended_learning_rate": 2e-4
+      },
+      "training_notes": "Very lightweight. Ideal for experimentation and quick iterations. Limited context window makes it unsuitable for long-form tasks.",
+      "tags": ["lightweight", "beginner", "fast-iteration", "chat"]
+    },
+    {
+      "id": "qwen2.5-1.5b-instruct",
+      "name": "Qwen 2.5 1.5B Instruct",
+      "huggingface_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "architecture": "Qwen2ForCausalLM",
+      "family": "qwen2",
+      "parameters": 1540000000,
+      "parameters_display": "1.5B",
+      "context_length": 32768,
+      "tokenizer": "Qwen2Tokenizer",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 6,
+      "recommended_gpu": "NVIDIA RTX 3060 12GB",
+      "license": "Apache 2.0",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 8,
+        "alpha": 16,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 8,
+        "recommended_learning_rate": 2e-4
+      },
+      "training_notes": "Excellent value-for-performance. Good for projects needing long context. Strong multilingual capabilities.",
+      "tags": ["efficient", "long-context", "multilingual", "recommended"]
+    },
+    {
+      "id": "llama-3.2-3b-instruct",
+      "name": "Llama 3.2 3B Instruct",
+      "huggingface_id": "meta-llama/Llama-3.2-3B-Instruct",
+      "architecture": "LlamaForCausalLM",
+      "family": "llama",
+      "parameters": 3200000000,
+      "parameters_display": "3B",
+      "context_length": 131072,
+      "tokenizer": "AutoTokenizer",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 12,
+      "recommended_gpu": "NVIDIA RTX 4090 24GB",
+      "license": "Llama 3.2 Community License",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 4,
+        "recommended_learning_rate": 1e-4
+      },
+      "training_notes": "Best-in-class 3B model. Long context window enables complex instruction-tuning. Requires higher VRAM. Gated model — requires HuggingFace authentication.",
+      "tags": ["best-in-class", "long-context", "production", "gated"]
+    },
+    {
+      "id": "mistral-7b-instruct-v0.3",
+      "name": "Mistral 7B Instruct v0.3",
+      "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.3",
+      "architecture": "MistralForCausalLM",
+      "family": "mistral",
+      "parameters": 7300000000,
+      "parameters_display": "7B",
+      "context_length": 32768,
+      "tokenizer": "LlamaTokenizerFast",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 24,
+      "recommended_gpu": "NVIDIA RTX 4090 24GB",
+      "license": "Apache 2.0",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 2,
+        "recommended_learning_rate": 1e-4
+      },
+      "training_notes": "Strong general-purpose model. Excellent for instruction tuning. Requires significant VRAM — best suited for RTX 4090 or A100.",
+      "tags": ["production", "strong-baseline", "instruction-tuning"]
+    },
+    {
+      "id": "gemma-3-4b-it",
+      "name": "Gemma 3 4B Instruct",
+      "huggingface_id": "google/gemma-3-4b-it",
+      "architecture": "Gemma3ForCausalLM",
+      "family": "gemma",
+      "parameters": 4000000000,
+      "parameters_display": "4B",
+      "context_length": 32768,
+      "tokenizer": "GemmaTokenizer",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 16,
+      "recommended_gpu": "NVIDIA RTX 4090 24GB",
+      "license": "Gemma License",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 4,
+        "recommended_learning_rate": 1e-4
+      },
+      "training_notes": "Google's latest open model. Strong performance per parameter. Requires HuggingFace authentication for gated access.",
+      "tags": ["efficient", "modern", "google", "gated"]
+    },
+    {
+      "id": "phi-4-mini-instruct",
+      "name": "Phi-4 Mini Instruct",
+      "huggingface_id": "microsoft/Phi-4-mini-instruct",
+      "architecture": "Phi4ForCausalLM",
+      "family": "phi",
+      "parameters": 3800000000,
+      "parameters_display": "3.8B",
+      "context_length": 131072,
+      "tokenizer": "Phi4Tokenizer",
+      "precision": ["fp16", "bf16"],
+      "recommended_precision": "bf16",
+      "recommended_vram_gb": 12,
+      "recommended_gpu": "NVIDIA RTX 4090 24GB",
+      "license": "MIT",
+      "instruction_tuned": true,
+      "supports_lora": true,
+      "lora_defaults": {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": [
+          "q_proj", "k_proj", "v_proj", "o_proj",
+          "gate_proj", "up_proj", "down_proj"
+        ],
+        "recommended_batch_size": 4,
+        "recommended_learning_rate": 1e-4
+      },
+      "training_notes": "Excellent reasoning capabilities. Very long context window. MIT license enables commercial use. Best for complex instruction-tuning tasks.",
+      "tags": ["reasoning", "long-context", "permissive", "recommended"]
+    }
+  ],
+  "gpu_compatibility": {
+    "rtx_4090_24gb": {
+      "name": "NVIDIA RTX 4090 24GB",
+      "vram_gb": 24,
+      "cuda_cores": 16384,
+      "compatibility": "compatible",
+      "notes": "Best consumer GPU for fine-tuning. Handles all models in registry at rank 16."
+    },
+    "rtx_4080_16gb": {
+      "name": "NVIDIA RTX 4080 16GB",
+      "vram_gb": 16,
+      "cuda_cores": 9728,
+      "compatibility": "compatible",
+      "notes": "Good for models up to 4B parameters. May need gradient accumulation for 7B."
+    },
+    "rtx_4060_8gb": {
+      "name": "NVIDIA RTX 4060 8GB",
+      "vram_gb": 8,
+      "cuda_cores": 3072,
+      "compatibility": "compatible",
+      "notes": "Suitable for 1-2B models with low LoRA rank. Use gradient checkpointing."
+    },
+    "rtx_3060_12gb": {
+      "name": "NVIDIA RTX 3060 12GB",
+      "vram_gb": 12,
+      "cuda_cores": 3584,
+      "compatibility": "compatible",
+      "notes": "Good budget option. Handles up to 3B models with LoRA rank 8-16."
+    },
+    "tesla_t4_16gb": {
+      "name": "NVIDIA Tesla T4 16GB",
+      "vram_gb": 16,
+      "cuda_cores": 2560,
+      "compatibility": "compatible",
+      "notes": "Common cloud GPU. Good for 1-3B models. Limited compute vs RTX cards."
+    },
+    "tesla_p100_16gb": {
+      "name": "NVIDIA Tesla P100 16GB",
+      "vram_gb": 16,
+      "cuda_cores": 3584,
+      "compatibility": "compatible",
+      "notes": "Older architecture but sufficient VRAM. FP16 only (no BF16)."
+    },
+    "rtx_3050_6gb": {
+      "name": "NVIDIA RTX 3050 6GB",
+      "vram_gb": 6,
+      "cuda_cores": 2304,
+      "compatibility": "limited",
+      "notes": "VRAM-limited. Only smallest models at rank 4-8. Expect OOM on 3B+."
+    },
+    "gtx_1650_4gb": {
+      "name": "NVIDIA GTX 1650 4GB",
+      "vram_gb": 4,
+      "cuda_cores": 896,
+      "compatibility": "unsupported",
+      "notes": "Insufficient VRAM for LoRA fine-tuning. Consider cloud GPU options."
+    },
+    "a100_40gb": {
+      "name": "NVIDIA A100 40GB",
+      "vram_gb": 40,
+      "cuda_cores": 6912,
+      "compatibility": "compatible",
+      "notes": "Datacenter GPU. Handles all models comfortably. Fastest training speeds."
+    },
+    "a100_80gb": {
+      "name": "NVIDIA A100 80GB",
+      "vram_gb": 80,
+      "cuda_cores": 6912,
+      "compatibility": "compatible",
+      "notes": "Maximum capacity. Handles all models at high batch sizes and ranks."
+    }
+  },
+  "optimizers": {
+    "adamw": {
+      "name": "AdamW",
+      "description": "Adam with decoupled weight decay. The standard choice for most fine-tuning tasks.",
+      "advantages": ["Stable convergence", "Widely tested", "Good default"],
+      "disadvantages": ["Higher memory usage (stores two momentum buffers)"],
+      "recommended_use": "Default for all fine-tuning. Works well across model sizes."
+    },
+    "paged_adamw": {
+      "name": "Paged AdamW 8-bit",
+      "description": "Memory-efficient AdamW with paged optimization states. Reduces VRAM usage.",
+      "advantages": ["~25% less VRAM than AdamW", "Good for constrained GPUs"],
+      "disadvantages": ["Slightly slower than standard AdamW", "8-bit precision trade-off"],
+      "recommended_use": "Use when VRAM is limited. Good for 7B models on 16GB GPUs."
+    },
+    "adafactor": {
+      "name": "Adafactor",
+      "description": "Adaptive learning rate with reduced memory footprint. No momentum buffers.",
+      "advantages": ["Lowest memory usage", "Good for very large models"],
+      "disadvantages": ["Can be less stable", "May require learning rate tuning"],
+      "recommended_use": "Memory-constrained scenarios. Fallback when AdamW OOMs."
+    },
+    "sgd": {
+      "name": "SGD",
+      "description": "Stochastic gradient descent with momentum. Simple and well-understood.",
+      "advantages": ["Minimal memory overhead", "Simple"],
+      "disadvantages": ["Slower convergence", "Sensitive to learning rate"],
+      "recommended_use": "Rarely used for LoRA. Prefer AdamW unless experimenting."
+    }
+  },
+  "schedulers": {
+    "linear": {
+      "name": "Linear",
+      "description": "Linearly decays the learning rate from initial to zero over the training steps.",
+      "use_cases": ["Default choice", "Stable for most fine-tuning"],
+      "recommendation": "Start with linear unless you have a specific reason to change."
+    },
+    "cosine": {
+      "name": "Cosine",
+      "description": "Cosine annealing schedule. Smooth decay from initial to zero.",
+      "use_cases": ["Large models", "Long training runs"],
+      "recommendation": "Good alternative to linear. Slightly smoother decay curve."
+    },
+    "constant": {
+      "name": "Constant",
+      "description": "Fixed learning rate throughout training. No decay.",
+      "use_cases": ["Short experiments", "Debugging"],
+      "recommendation": "Not recommended for production. Use only for quick tests."
+    },
+    "polynomial": {
+      "name": "Polynomial",
+      "description": "Polynomial decay with configurable power. Flexible schedule shape.",
+      "use_cases": ["Custom training regimes"],
+      "recommendation": "Advanced option. Use when linear/cosine don't meet your needs."
+    }
+  },
+  "precision_modes": {
+    "fp16": {
+      "name": "FP16 (Half Precision)",
+      "description": "16-bit floating point. Supported by most modern GPUs.",
+      "vram_factor": 1.0,
+      "compatibility": "Turing architecture and newer (RTX 20xx+, T4, V100, A100)",
+      "notes": "May cause overflow in some models. BF16 is generally preferred."
+    },
+    "bf16": {
+      "name": "BF16 (Brain Floating Point)",
+      "description": "16-bit with wider exponent range. Same range as FP32, reduced precision.",
+      "vram_factor": 1.0,
+      "compatibility": "Ampere architecture and newer (RTX 30xx+, A100)",
+      "notes": "Recommended for most training. Better numerical stability than FP16."
+    },
+    "fp32": {
+      "name": "FP32 (Full Precision)",
+      "description": "32-bit floating point. Maximum precision, maximum memory usage.",
+      "vram_factor": 2.0,
+      "compatibility": "All GPUs",
+      "notes": "Not recommended for LoRA. Uses 2x memory with minimal quality gain."
+    }
+  }
+}

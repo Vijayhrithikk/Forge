@@ -1,0 +1,19 @@
+# Forge Backend Dependencies
+# FastAPI and server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Configuration and environment
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# Structured logging
+structlog==24.4.0
+
+# File upload handling
+aiofiles==25.1.0
+python-multipart==0.0.32
+
+# Development
+httpx==0.28.1

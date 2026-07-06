@@ -1,0 +1,10 @@
+{
+  "stages": [
+    {
+      "stage": "execution_attempted",
+      "status": "SKIPPED",
+      "reason": "Environment cannot execute: No CUDA GPU detected, Low VRAM (0GB)",
+      "duration": 0.76
+    }
+  ]
+}

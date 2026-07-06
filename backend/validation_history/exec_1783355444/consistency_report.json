@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "forge_version": "0.1.0",
+  "generated_at": "2026-07-06T16:30:45.293822+00:00",
+  "artifacts": {
+    "execution_session.json": {
+      "status": "PASS",
+      "schema": "1.0",
+      "forge_version": "0.1.0"
+    },
+    "execution_trace.json": {
+      "status": "PASS",
+      "schema": "unknown",
+      "forge_version": "unknown"
+    },
+    "execution_certificate.json": {
+      "status": "PASS",
+      "schema": "1.0",
+      "forge_version": "0.1.0"
+    },
+    "validation_matrix.json": {
+      "status": "PASS",
+      "schema": "1.0",
+      "forge_version": "0.1.0"
+    },
+    "validation_dataset_manifest.json": {
+      "status": "MISSING"
+    },
+    "environment_capability.json": {
+      "status": "MISSING"
+    },
+    "execution_authorization.json": {
+      "status": "MISSING"
+    }
+  },
+  "present": 4,
+  "missing": 3,
+  "overall": "WARNING"
+}

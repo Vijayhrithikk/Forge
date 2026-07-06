@@ -79,14 +79,12 @@ def process_documents(docs_dir: str = "documents") -> dict:
         return {"found": False, "message": "No documents directory found. Place PDF/DOCX/CSV/TXT files in 'documents/'."}
 
     print(f"Documents found in {docs_dir}/ — generating instruction dataset...")
-    from app.engines.dataset.document_engine import extractor, generator
+    from app.engines.dataset.document_engine import DocumentExtractor, generator
 
     files = list(docs_path.iterdir())
     supported = [f for f in files if f.suffix.lower() in DocumentExtractor.SUPPORTED]
     if not supported:
         return {"found": False, "message": f"No supported files in {docs_dir}/. Supported: {DocumentExtractor.SUPPORTED}"}
-
-    from app.engines.dataset.document_engine import DocumentExtractor
     pairs, stats = generator.generate_from_files([docs_path])
     if not pairs:
         return {"found": False, "message": "No text extracted from documents."}

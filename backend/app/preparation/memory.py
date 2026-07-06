@@ -69,7 +69,8 @@ class MemoryEngine:
         elif device.device_type == "cuda":
             try:
                 import torch
-                info.total_gb = torch.cuda.get_device_properties(device.index).total_mem / (1024 ** 3)
+                props = torch.cuda.get_device_properties(device.index)
+                info.total_gb = getattr(props, 'total_memory', props.total_mem) / (1024 ** 3)
                 free_bytes, _ = torch.cuda.mem_get_info(device.index)
                 info.free_gb = free_bytes / (1024 ** 3)
             except ImportError:

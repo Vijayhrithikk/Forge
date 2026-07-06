@@ -50,7 +50,7 @@ class GPUDiscovery:
         gpus = []
         for i in range(device_count):
             props = torch.cuda.get_device_properties(i)
-            total_mem = props.total_mem / (1024 ** 3)
+            total_mem = getattr(props, 'total_memory', props.total_mem) / (1024 ** 3)
             try:
                 free_mem = torch.cuda.mem_get_info(i)[0] / (1024 ** 3)
             except Exception:

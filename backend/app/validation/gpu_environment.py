@@ -79,7 +79,7 @@ class GPUEnvironmentValidator:
                     props = torch.cuda.get_device_properties(i)
                     gpus.append({
                         "index": i, "name": props.name,
-                        "vram_gb": round(props.total_mem / (1024**3), 1),
+                        "vram_gb": round(getattr(props, 'total_memory', props.total_mem) / (1024**3), 1),
                         "compute_capability": f"{props.major}.{props.minor}",
                         "multi_processor_count": props.multi_processor_count,
                     })

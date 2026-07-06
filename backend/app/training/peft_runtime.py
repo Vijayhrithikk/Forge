@@ -49,17 +49,20 @@ class PEFTRuntime:
 
         try:
             from peft import LoraConfig, TaskType, get_peft_model
-            lora_config = LoraConfig(
-                task_type=TaskType.CAUSAL_LM,
-                r=rank, lora_alpha=alpha, lora_dropout=dropout,
-                bias=bias, target_modules=modules,
-            )
-            peft_model = get_peft_model(model, lora_config)
-            injected = True
-            logger.info("peft_injected", rank=rank, alpha=alpha, modules=len(modules))
         except ImportError:
-            logger.warning("peft_not_installed",
-                           message="Install 'peft' for LoRA injection. Using base model.")
+            raise PEFTInjectionError(
+                "The 'peft' package is required for LoRA fine-tuning. "
+                "Install it with: pip install peft"
+            )
+
+        lora_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=rank, lora_alpha=alpha, lora_dropout=dropout,
+            bias=bias, target_modules=modules,
+        )
+        peft_model = get_peft_model(model, lora_config)
+        injected = True
+        logger.info("peft_injected", rank=rank, alpha=alpha, modules=len(modules))
 
         # Count trainable params
         trainable = sum(p.numel() for p in peft_model.parameters() if p.requires_grad)
